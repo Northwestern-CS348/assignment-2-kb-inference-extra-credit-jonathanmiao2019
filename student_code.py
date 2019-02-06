@@ -130,6 +130,80 @@ class KnowledgeBase(object):
         # Implementation goes here
         # Not required for the extra credit assignment
 
+    def kb_issupported(self, fact_or_rule):
+        if len(fact_or_rule.supported_by) > 0:
+            return True
+        else:
+            return False
+
+    def kb_convertstatement(self, statement):
+        string = "("
+        string = string + statement.predicate
+        for term in statement.terms:
+            string = string + " " + str(term)
+        string = string + ")"
+        return string
+
+    def kb_convertrule(self, rule):
+        string = "rule: (" + self.kb_convertstatement(rule.lhs[0])
+        for i in range(1, len(rule.lhs)):
+            string = string + ", " + self.kb_convertstatement(rule.lhs[i])
+        string = string + ") -> " + self.kb_convertstatement(rule.rhs)
+        return string
+
+    def kb_lead(self, lead):
+        string = ''
+        for i in range(0,lead):
+            string = string + " "
+        return string
+
+    def kb_print(self, lead, fact_or_rule):
+        leads = lead
+        string = ""
+        if isinstance(fact_or_rule, Fact):
+            if fact_or_rule.asserted:
+                string = "fact: " + self.kb_convertstatement(fact_or_rule.statement) + " ASSERTED\n"
+            else:
+                string = "fact: " + self.kb_convertstatement(fact_or_rule.statement) + "\n"
+                # Need to check if the fact is supported
+                if self.kb_issupported(fact_or_rule):
+                    for supported in fact_or_rule.supported_by:
+                        string += self.kb_lead(leads) + "  SUPPORTED BY\n"
+                        fact = supported[0]
+                        rule = supported[1]
+                        # Check if the statement is asserted
+                        if fact.asserted:
+                            string += self.kb_lead(leads) + "    fact: " + self.kb_convertstatement(fact.statement) + " ASSERTED\n"
+                        else:
+                            string += self.kb_lead(leads) + "    " + self.kb_print(leads+4, fact)
+                        # Check if the rule is supported
+                        if rule.asserted:
+                            string += self.kb_lead(leads) + "    " + self.kb_convertrule(rule) + " ASSERTED\n"
+                        else:
+                            string += self.kb_lead(leads) + "    " + self.kb_print(leads+4, rule)
+        if isinstance(fact_or_rule, Rule):
+            if fact_or_rule.asserted:
+                string = self.kb_convertrule(fact_or_rule) + " ASSERTED\n"
+            else:
+                string = self.kb_convertrule(fact_or_rule) + "\n"
+                # Need to check if the fact is supported
+                if self.kb_issupported(fact_or_rule):
+                    for supported in fact_or_rule.supported_by:
+                        string += self.kb_lead(leads) + "  SUPPORTED BY\n"
+                        fact = supported[0]
+                        rule = supported[1]
+                        # Check if the statement is asserted
+                        if fact.asserted:
+                            string += self.kb_lead(leads) + "    fact: " + self.kb_convertstatement(fact.statement) + " ASSERTED\n"
+                        else:
+                            string += self.kb_lead(leads) + "    " + self.kb_print(leads+4, fact)
+                        # Check if the rule is supported
+                        if rule.asserted:
+                            string += self.kb_lead(leads) + "    " + self.kb_convertrule(rule) + " ASSERTED\n"
+                        else:
+                            string += self.kb_lead(leads) + "    " + self.kb_print(leads+4, rule)
+        return string
+
     def kb_explain(self, fact_or_rule):
         """
         Explain where the fact or rule comes from
@@ -142,6 +216,19 @@ class KnowledgeBase(object):
         """
         ####################################################
         # Student code goes here
+        # Need to determine if the fact or rule exists in the database
+        if not isinstance(fact_or_rule, Fact) and not isinstance(fact_or_rule, Rule):
+            return False
+        elif isinstance(fact_or_rule, Fact) and not self.kb_ask(fact_or_rule):
+            string = "Fact is not in the KB"
+            return string
+        elif isinstance(fact_or_rule, Rule):
+            if fact_or_rule not in self.rules:
+                string = "Rule is not in the KB"
+                return string
+        elif isinstance(fact_or_rule, Fact):
+            fact = self._get_fact(fact_or_rule)
+            return self.kb_print(0, fact)
 
 
 class InferenceEngine(object):

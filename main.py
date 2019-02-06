@@ -44,7 +44,7 @@ class KBTest(unittest.TestCase):
         # first set of support
         f0.supported_by.append([f3, r4])
         r4.supported_by.append([f2, r3])
-        r3.supported_by.append([f1, r1])        
+        r3.supported_by.append([f1, r1])
 
         # second set of support
         f0.supported_by.append([f4, r5])
